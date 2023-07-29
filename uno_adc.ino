@@ -1,5 +1,7 @@
-uint16_t buffer1[256] = { 0 };
-uint16_t buffer2[256] = { 0 };
+#define TAMANHO_AMOSTRAS 32
+
+uint16_t buffer1[TAMANHO_AMOSTRAS] = { 0 };
+uint16_t buffer2[TAMANHO_AMOSTRAS] = { 0 };
 
 volatile unsigned long int conta = 0;
 volatile bool dadosProntos = false;
@@ -9,7 +11,7 @@ volatile uint16_t *ponteiroAmostras = buffer1;
 
 ISR(ADC_vect) {
     ponteiroAmostras[conta++] = le_adc();
-    if(conta >= 256)
+    if(conta >= TAMANHO_AMOSTRAS)
     {
         conta = 0;
         volatile uint16_t *tmp = ponteiroAmostras;
@@ -43,17 +45,29 @@ uint16_t le_adc()
 }
 
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(256000);
 
     configura_adc();
     // Inicia ADC
     ADCSRA |= _BV(ADSC);
 }
 
+unsigned long long antes = 0;
 void loop() {
     if(dadosProntos)
     {
-        Serial.println("Dados prontos");
+        uint16_t *dados = const_cast<uint16_t*>(ponteiroDados);
+        // Cada amostra tem dois bytes, portanto são 2 * TAMANHO_AMOSTRAS bytes.
+        Serial.write(reinterpret_cast<char*>(dados), 2 * TAMANHO_AMOSTRAS);
         dadosProntos = false;
+    }
+
+    // Envia uma sequência única para sincronizar o início de uma amostra
+    unsigned long long agora = millis();
+    if(agora - antes >= 50)
+    {
+        antes = agora;
+        uint16_t sincroniza = 0xffff;
+        Serial.write(reinterpret_cast<char*>(&sincroniza), 2);
     }
 }
