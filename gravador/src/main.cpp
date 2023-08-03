@@ -191,14 +191,33 @@ int main(int argc, char **argv) {
     std::string nomePorta;
     std::string caminho;
     CLI::App app{"Get audio stream from serial port"};
-    app.add_option("port", nomePorta, "serial port name")->required();
-    app.add_option("path", caminho, "file name where to save data")->required();
-    app.parse_complete_callback(
+
+    app.require_subcommand(1, 1);
+
+    auto record = app.add_subcommand("record", "Record audio data in a .wav file");
+    record->add_option("port", nomePorta, "serial port name")->required();
+    record->add_option("path", caminho, "file name where to save data")->required();
+    record->parse_complete_callback(
         [&nomePorta, &caminho]{
             WavFile arquivo{caminho, true};
             SerialPort porta{nomePorta, 256000};
             loop(porta, arquivo);
         });
+
+    auto list = app.add_subcommand("list", "List available ports");
+    list->parse_complete_callback(
+        []{
+            sp_port **port_list;
+            if(sp_list_ports(&port_list) != SP_OK)
+                throw std::runtime_error("Error listing ports");
+
+            sp_port *port;
+            while((port = *port_list++) != nullptr)
+            {
+                std::cout << port->name << "\n";
+            }
+        }
+    );
     
     try
     {
