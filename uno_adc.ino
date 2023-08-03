@@ -52,22 +52,16 @@ void setup() {
     ADCSRA |= _BV(ADSC);
 }
 
-unsigned long long antes = 0;
 void loop() {
     if(dadosProntos)
     {
         uint16_t *dados = const_cast<uint16_t*>(ponteiroDados);
         // Cada amostra tem dois bytes, portanto são 2 * TAMANHO_AMOSTRAS bytes.
         Serial.write(reinterpret_cast<char*>(dados), 2 * TAMANHO_AMOSTRAS);
-        dadosProntos = false;
-    }
 
-    // Envia uma sequência única para sincronizar o início de uma amostra
-    unsigned long long agora = millis();
-    if(agora - antes >= 50)
-    {
-        antes = agora;
         uint16_t sincroniza = 0xffff;
         Serial.write(reinterpret_cast<char*>(&sincroniza), 2);
+
+        dadosProntos = false;
     }
 }
