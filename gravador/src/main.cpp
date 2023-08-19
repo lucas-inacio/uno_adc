@@ -141,7 +141,7 @@ void loop(SerialPort &porta, WavFile &arquivo)
             uint8_t *buffer = new uint8_t[_dados.size() * 2];
             for(size_t i = 0; i < _dados.size(); ++i)
             {
-                uint16_t amostra = _dados[i] << 4; // Converte de 10 bits para 16 bits
+                uint16_t amostra = _dados[i] << 6; // Converte de 10 bits para 16 bits
                 amostra -= 0x8000; // Normaliza entre -32768/+32767
 
                 uint8_t byteBaixo = static_cast<uint8_t>(amostra & 0x00ff);
