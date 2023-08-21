@@ -40,7 +40,9 @@ uint16_t le_adc()
 {
     // ADCL deve ser lido antes de ADCH
     uint16_t valor = ADCL & 0xff;
-    valor |= (ADCH & 0x00ff) << 8;
+    valor |= (ADCH & 0x03) << 8;
+    // Coloca em formato de 16 bits. Efetivamente aplicando um ganho no sinal.
+    valor <<= 6;
     return valor;
 }
 
